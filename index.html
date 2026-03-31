@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+        <label class="field">
+          <span>保存済み一覧</span>
+          <select id="savedChartsSelect" size="8"></select>
+        </label>
+      </section>
 
+      <section class="panel">
+        <h2>PNG出力</h2>
+
+        <label class="field">
+          <span>PNGファイル名</span>
+          <input id="pngFileNameInput" type="text" placeholder="例：handover_chart_2026-04-01" />
+        </label>
+
+        <button id="exportPngBtn" type="button">バーチャート部分をPNG保存</button>
+        <p class="help-text small">
+          保存先は通常ブラウザの既定ダウンロード先です。
+        </p>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="chart-toolbar panel">
+        <div class="chart-meta">
+          <strong id="chartTitle">未保存のバーチャート</strong>
+          <span id="chartMetaText">都道府県と表示パターンを選択してください</span>
+        </div>
+        <div class="chart-actions">
+          <button id="removeSelectedFrameBtn" type="button">選択枠を削除</button>
+          <button id="clearSelectionBtn" type="button">選択解除</button>
+        </div>
+      </div>
+
+      <div id="chartExportTarget" class="chart-export-target panel">
+        <div id="chartContainer" class="chart-container"></div>
+        <div id="selectionOverlay" class="selection-overlay hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <template id="cellTemplate">
+    <div class="chart-cell" data-row="" data-col="">
+      <span class="cell-warning"></span>
+      <span class="cell-value"></span>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
