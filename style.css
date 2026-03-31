@@ -1,1 +1,64 @@
+:root {
+  --bg: #f4f6fb;
+  --panel: #ffffff;
+  --border: #d8deea;
+  --text: #1f2937;
+  --muted: #667085;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --header-bg: #0f172a;
+  --header-text: #f8fafc;
+  --cell-width: 72px;
+  --cell-height: 44px;
+  --label-col-width: 110px;
+  --region-col-width: 72px;
+  --time-header-height: 42px;
+}
 
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+.app-header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 16px 20px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.subtext {
+  margin: 6px 0 0;
+  opacity: 0.9;
+  font-size: 0.92rem;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  min-height: calc(100vh - 88px);
+}
+
+.sidebar,
+.workspace {
+  min-width: 0;
+}
+}
