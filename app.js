@@ -1,4 +1,15 @@
-const TIME_SLOTS = ["21", "00", "03", "06", "09", "12", "15", "18"];
+const TIME_BANDS = [
+  { hour: 0, label: "未明", range: "0-3時" },
+  { hour: 3, label: "明け方", range: "3-6時" },
+  { hour: 6, label: "朝", range: "6-9時" },
+  { hour: 9, label: "昼前", range: "9-12時" },
+  { hour: 12, label: "昼過ぎ", range: "12-15時" },
+  { hour: 15, label: "夕方", range: "15-18時" },
+  { hour: 18, label: "夜のはじめ頃", range: "18-21時" },
+  { hour: 21, label: "夜遅く", range: "21-24時" }
+];
+
+const DAY_LABELS = ["今日", "明日", "明後日"];
 
 const STORAGE_KEY = "weather-bar-chart-saves-v1";
 
