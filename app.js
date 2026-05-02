@@ -11,6 +11,13 @@ const TIME_BANDS = [
   { hour: 21, label: "夜遅く", range: "21-24時" }
 ];
 
+const DAY2_BLOCKS = [
+  { key: "2-0-3", day: 2, hour: 0, label: "", range: "", hours: [0, 3] },
+  { key: "2-6-9", day: 2, hour: 6, label: "", range: "", hours: [6, 9] },
+  { key: "2-12-15", day: 2, hour: 12, label: "", range: "", hours: [12, 15] },
+  { key: "2-18-21", day: 2, hour: 18, label: "", range: "", hours: [18, 21] }
+];
+
 const DAY_LABELS = ["今日", "明日", "明後日"];
 
 const PREFECTURE_CONFIG = {
@@ -272,6 +279,17 @@ function createTimeSlots(startHour, endDay) {
   const slots = [];
 
   for (let day = 0; day <= endDay; day++) {
+    if (day === 2) {
+      DAY2_BLOCKS.forEach(block => {
+        slots.push({
+          ...block,
+          dayLabel: DAY_LABELS[day],
+          isDay2Block: true
+        });
+      });
+      continue;
+    }
+
     TIME_BANDS.forEach(band => {
       if (day === 0 && band.hour < startHour) return;
 
@@ -281,7 +299,8 @@ function createTimeSlots(startHour, endDay) {
         hour: band.hour,
         dayLabel: DAY_LABELS[day],
         label: band.label,
-        range: band.range
+        range: band.range,
+        isDay2Block: false
       });
     });
   }
@@ -418,14 +437,20 @@ function renderChart() {
   table.appendChild(createTableHeader());
 
   const tbody = document.createElement("tbody");
+  const rowSpanMap = createAreaRowSpanMap(state.rows);
 
   state.rows.forEach((row, rowIndex) => {
     const tr = document.createElement("tr");
 
-    const areaCell = document.createElement("th");
-    areaCell.className = "area-cell";
-    areaCell.textContent = row.area;
-    tr.appendChild(areaCell);
+    const rowSpanInfo = rowSpanMap.get(rowIndex);
+
+    if (rowSpanInfo?.show) {
+      const areaCell = document.createElement("th");
+      areaCell.className = "area-cell";
+      areaCell.textContent = row.area;
+      areaCell.rowSpan = rowSpanInfo.rowSpan;
+      tr.appendChild(areaCell);
+    }
 
     const elementCell = document.createElement("th");
     elementCell.className = "element-cell";
@@ -471,6 +496,36 @@ function renderChart() {
   elements.chartContainer.appendChild(table);
 }
 
+function createAreaRowSpanMap(rows) {
+  const map = new Map();
+  let index = 0;
+
+  while (index < rows.length) {
+    const area = rows[index].area;
+    let rowSpan = 1;
+
+    while (index + rowSpan < rows.length && rows[index + rowSpan].area === area) {
+      rowSpan++;
+    }
+
+    map.set(index, {
+      show: true,
+      rowSpan
+    });
+
+    for (let i = index + 1; i < index + rowSpan; i++) {
+      map.set(i, {
+        show: false,
+        rowSpan: 0
+      });
+    }
+
+    index += rowSpan;
+  }
+
+  return map;
+}
+
 function createTableHeader() {
   const thead = document.createElement("thead");
 
@@ -501,7 +556,14 @@ function createTableHeader() {
   slots.forEach(slot => {
     const th = document.createElement("th");
     th.className = "time-band-cell";
-    th.textContent = slot.label;
+
+    if (slot.day === 2) {
+      th.classList.add("day2-block-cell");
+      th.textContent = "";
+    } else {
+      th.textContent = slot.label;
+    }
+
     timeRow.appendChild(th);
   });
 
