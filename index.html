@@ -1,50 +1,169 @@
 <!DOCTYPE html>
-        <label class="field">
-          <span>保存済み一覧</span>
-          <select id="savedChartsSelect" size="8"></select>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天気予報時系列バーチャート作成ツール</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <div>
+      <h1>天気予報時系列バーチャート作成ツール</h1>
+      <p>都道府県・地域別の時系列バーチャートを作成できます。</p>
+    </div>
+  </header>
+
+  <main class="app-layout">
+    <aside class="control-panel">
+      <section class="panel-section">
+        <h2>基本設定</h2>
+
+        <label>
+          都道府県
+          <select id="prefectureSelect"></select>
         </label>
-      </section>
 
-      <section class="panel">
-        <h2>PNG出力</h2>
-
-        <label class="field">
-          <span>PNGファイル名</span>
-          <input id="pngFileNameInput" type="text" placeholder="例：handover_chart_2026-04-01" />
+        <label>
+          表示パターン
+          <select id="patternSelect"></select>
         </label>
 
-        <button id="exportPngBtn" type="button">バーチャート部分をPNG保存</button>
-        <p class="help-text small">
-          保存先は通常ブラウザの既定ダウンロード先です。
-        </p>
-      </section>
-    </aside>
-
-    <section class="workspace">
-      <div class="chart-toolbar panel">
-        <div class="chart-meta">
-          <strong id="chartTitle">未保存のバーチャート</strong>
-          <span id="chartMetaText">都道府県と表示パターンを選択してください</span>
+        <div class="button-row">
+          <button id="newChartBtn" type="button">新規作成</button>
+          <button id="resetChartBtn" type="button" class="danger">初期化</button>
         </div>
-        <div class="chart-actions">
+      </section>
+
+      <section class="panel-section">
+        <h2>行追加</h2>
+
+        <label>
+          地域
+          <select id="regionSelect"></select>
+        </label>
+
+        <label>
+          要素
+          <select id="elementSelect"></select>
+        </label>
+
+        <button id="addRowBtn" type="button">行を追加</button>
+      </section>
+
+      <section class="panel-section">
+        <h2>編集モード</h2>
+
+        <label class="radio-label">
+          <input type="radio" name="editMode" value="value" checked />
+          値入力
+        </label>
+
+        <label class="radio-label">
+          <input type="radio" name="editMode" value="fill" />
+          セル色変更
+        </label>
+
+        <label class="radio-label">
+          <input type="radio" name="editMode" value="frame" />
+          囲み枠作成
+        </label>
+
+        <label class="radio-label">
+          <input type="radio" name="editMode" value="warning" />
+          注意報マーク
+        </label>
+      </section>
+
+      <section class="panel-section">
+        <h2>セル色</h2>
+
+        <label>
+          塗りつぶし色
+          <input id="fillColorInput" type="color" value="#dbeafe" />
+        </label>
+      </section>
+
+      <section class="panel-section">
+        <h2>囲み枠</h2>
+
+        <label>
+          枠色
+          <input id="frameColorInput" type="color" value="#ef4444" />
+        </label>
+
+        <label>
+          ラベル
+          <input id="frameLabelInput" type="text" placeholder="例：強雨域" />
+        </label>
+
+        <div class="button-row">
           <button id="removeSelectedFrameBtn" type="button">選択枠を削除</button>
           <button id="clearSelectionBtn" type="button">選択解除</button>
         </div>
-      </div>
+      </section>
 
-      <div id="chartExportTarget" class="chart-export-target panel">
-        <div id="chartContainer" class="chart-container"></div>
-        <div id="selectionOverlay" class="selection-overlay hidden"></div>
+      <section class="panel-section">
+        <h2>注意報マーク</h2>
+
+        <label>
+          種別
+          <select id="warningTypeSelect">
+            <option value="発">発</option>
+            <option value="解">解</option>
+            <option value="発解">発解</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="panel-section">
+        <h2>保存</h2>
+
+        <label>
+          保存名
+          <input id="saveNameInput" type="text" placeholder="例：大阪_夜勤引継ぎ" />
+        </label>
+
+        <button id="saveBtn" type="button">保存</button>
+
+        <label>
+          保存済みデータ
+          <select id="savedChartsSelect"></select>
+        </label>
+
+        <div class="button-row">
+          <button id="loadBtn" type="button">読込</button>
+          <button id="deleteSaveBtn" type="button" class="danger">削除</button>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2>PNG出力</h2>
+
+        <label>
+          ファイル名
+          <input id="pngFileNameInput" type="text" value="weather-barchart" />
+        </label>
+
+        <button id="exportPngBtn" type="button">PNG保存</button>
+      </section>
+    </aside>
+
+    <section class="chart-panel">
+      <div id="chartExportTarget" class="chart-export-target">
+        <div class="chart-title-area">
+          <h2 id="chartTitle">バーチャート</h2>
+          <p id="chartMetaText"></p>
+        </div>
+
+        <div class="chart-scroll-wrap">
+          <div id="chartContainer" class="chart-container"></div>
+          <div id="selectionOverlay" class="selection-overlay"></div>
+        </div>
       </div>
     </section>
   </main>
-
-  <template id="cellTemplate">
-    <div class="chart-cell" data-row="" data-col="">
-      <span class="cell-warning"></span>
-      <span class="cell-value"></span>
-    </div>
-  </template>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="app.js"></script>
