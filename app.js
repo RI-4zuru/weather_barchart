@@ -1,3 +1,5 @@
+const STORAGE_KEY = "weather-bar-chart-saves-v1";
+
 const TIME_BANDS = [
   { hour: 0, label: "未明", range: "0-3時" },
   { hour: 3, label: "明け方", range: "3-6時" },
@@ -10,8 +12,6 @@ const TIME_BANDS = [
 ];
 
 const DAY_LABELS = ["今日", "明日", "明後日"];
-
-const STORAGE_KEY = "weather-bar-chart-saves-v1";
 
 const PREFECTURE_CONFIG = {
   "大阪府": {
@@ -69,6 +69,8 @@ const ELEMENT_OPTIONS = [
 const elements = {
   prefectureSelect: document.getElementById("prefectureSelect"),
   patternSelect: document.getElementById("patternSelect"),
+  startTimeSelect: document.getElementById("startTimeSelect"),
+  endDaySelect: document.getElementById("endDaySelect"),
   regionSelect: document.getElementById("regionSelect"),
   elementSelect: document.getElementById("elementSelect"),
   newChartBtn: document.getElementById("newChartBtn"),
@@ -94,7 +96,7 @@ const elements = {
   clearSelectionBtn: document.getElementById("clearSelectionBtn")
 };
 
-let state = createNewChartState("大阪府", "全域");
+let state = null;
 let savedCharts = loadAllSaves();
 let dragState = null;
 let activeFrameId = null;
@@ -104,6 +106,12 @@ init();
 function init() {
   setupSelects();
   setupEvents();
+
+  const prefecture = elements.prefectureSelect?.value || "大阪府";
+  const pattern = elements.patternSelect?.value || getFirstPattern(prefecture);
+
+  state = createNewChartState(prefecture, pattern);
+
   refreshSavedChartSelect();
   render();
 }
@@ -112,7 +120,15 @@ function setupSelects() {
   setOptions(elements.prefectureSelect, Object.keys(PREFECTURE_CONFIG));
 
   if (elements.prefectureSelect) {
-    elements.prefectureSelect.value = state.prefecture;
+    elements.prefectureSelect.value = "大阪府";
+  }
+
+  if (elements.startTimeSelect && !elements.startTimeSelect.value) {
+    elements.startTimeSelect.value = "21";
+  }
+
+  if (elements.endDaySelect && !elements.endDaySelect.value) {
+    elements.endDaySelect.value = "1";
   }
 
   refreshPatternSelect();
@@ -123,9 +139,11 @@ function setupSelects() {
 function setupEvents() {
   elements.prefectureSelect?.addEventListener("change", () => {
     const prefecture = elements.prefectureSelect.value;
-    const firstPattern = Object.keys(PREFECTURE_CONFIG[prefecture].patterns)[0];
+    const firstPattern = getFirstPattern(prefecture);
 
     state = createNewChartState(prefecture, firstPattern);
+    activeFrameId = null;
+
     refreshPatternSelect();
     refreshRegionSelect();
     render();
@@ -136,8 +154,18 @@ function setupEvents() {
     const pattern = elements.patternSelect.value;
 
     state = createNewChartState(prefecture, pattern);
+    activeFrameId = null;
+
     refreshRegionSelect();
     render();
+  });
+
+  elements.startTimeSelect?.addEventListener("change", () => {
+    changeTimeRange();
+  });
+
+  elements.endDaySelect?.addEventListener("change", () => {
+    changeTimeRange();
   });
 
   elements.newChartBtn?.addEventListener("click", () => {
@@ -189,31 +217,50 @@ function setupEvents() {
     renderFrames();
   });
 
+  elements.chartContainer?.addEventListener("scroll", () => {
+    renderFrames();
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!dragState) return;
+    applyDragAction();
+    dragState = null;
+  });
+
   window.addEventListener("resize", () => {
     renderFrames();
   });
 }
 
 function createNewChartState(prefecture, pattern) {
+  const startHour = getStartHour();
+  const endDay = getEndDay();
+  const slots = createTimeSlots(startHour, endDay);
   const areas = PREFECTURE_CONFIG[prefecture].patterns[pattern];
 
   return {
     prefecture,
     pattern,
+    startHour,
+    endDay,
     rows: areas.flatMap(area => {
-      return DEFAULT_ROWS_PER_REGION.map(elementName => createRow(area, elementName));
+      return DEFAULT_ROWS_PER_REGION.map(elementName =>
+        createRow(area, elementName, slots)
+      );
     }),
     frames: []
   };
 }
 
-function createRow(area, elementName) {
+function createRow(area, elementName, slots = getCurrentSlots()) {
   return {
     id: createId(),
     area,
     elementName,
-    cells: TIME_SLOTS.map(time => ({
-      time,
+    cells: slots.map(slot => ({
+      key: slot.key,
+      day: slot.day,
+      hour: slot.hour,
       value: "",
       fillColor: "",
       warning: ""
@@ -221,20 +268,92 @@ function createRow(area, elementName) {
   };
 }
 
+function createTimeSlots(startHour, endDay) {
+  const slots = [];
+
+  for (let day = 0; day <= endDay; day++) {
+    TIME_BANDS.forEach(band => {
+      if (day === 0 && band.hour < startHour) return;
+
+      slots.push({
+        key: `${day}-${band.hour}`,
+        day,
+        hour: band.hour,
+        dayLabel: DAY_LABELS[day],
+        label: band.label,
+        range: band.range
+      });
+    });
+  }
+
+  return slots;
+}
+
+function changeTimeRange() {
+  if (!state) return;
+
+  const startHour = getStartHour();
+  const endDay = getEndDay();
+  const slots = createTimeSlots(startHour, endDay);
+
+  state.startHour = startHour;
+  state.endDay = endDay;
+  state.frames = [];
+
+  state.rows = state.rows.map(row => {
+    const oldCells = new Map(row.cells.map(cell => [cell.key, cell]));
+
+    return {
+      ...row,
+      cells: slots.map(slot => {
+        const oldCell = oldCells.get(slot.key);
+
+        if (oldCell) {
+          return {
+            ...oldCell,
+            key: slot.key,
+            day: slot.day,
+            hour: slot.hour
+          };
+        }
+
+        return {
+          key: slot.key,
+          day: slot.day,
+          hour: slot.hour,
+          value: "",
+          fillColor: "",
+          warning: ""
+        };
+      })
+    };
+  });
+
+  activeFrameId = null;
+  render();
+}
+
 function refreshPatternSelect() {
-  if (!elements.patternSelect) return;
+  if (!elements.patternSelect || !elements.prefectureSelect) return;
 
   const prefecture = elements.prefectureSelect.value;
   const patterns = Object.keys(PREFECTURE_CONFIG[prefecture].patterns);
 
   setOptions(elements.patternSelect, patterns);
-  elements.patternSelect.value = state.pattern;
+
+  if (state?.pattern && patterns.includes(state.pattern)) {
+    elements.patternSelect.value = state.pattern;
+  } else {
+    elements.patternSelect.value = patterns[0];
+  }
 }
 
 function refreshRegionSelect() {
   if (!elements.regionSelect) return;
 
-  const areas = PREFECTURE_CONFIG[state.prefecture].patterns[state.pattern];
+  const prefecture = elements.prefectureSelect?.value || state?.prefecture || "大阪府";
+  const pattern = elements.patternSelect?.value || getFirstPattern(prefecture);
+  const areas = PREFECTURE_CONFIG[prefecture].patterns[pattern];
 
   setOptions(elements.regionSelect, areas);
 }
@@ -280,7 +399,13 @@ function renderTitle() {
   }
 
   if (elements.chartMetaText) {
-    elements.chartMetaText.textContent = `時系列：${TIME_SLOTS.join(" / ")} 時`;
+    const slots = getCurrentSlots();
+    const first = slots[0];
+    const last = slots[slots.length - 1];
+
+    elements.chartMetaText.textContent =
+      `期間：${first.dayLabel}${String(first.hour).padStart(2, "0")}時から ` +
+      `${last.dayLabel}${String(last.hour).padStart(2, "0")}時まで`;
   }
 }
 
@@ -348,24 +473,63 @@ function renderChart() {
 
 function createTableHeader() {
   const thead = document.createElement("thead");
-  const tr = document.createElement("tr");
 
-  const area = document.createElement("th");
-  area.textContent = "地域";
-  tr.appendChild(area);
+  const dateRow = document.createElement("tr");
+  const timeRow = document.createElement("tr");
 
-  const element = document.createElement("th");
-  element.textContent = "要素";
-  tr.appendChild(element);
+  const areaTh = document.createElement("th");
+  areaTh.textContent = "地域";
+  areaTh.rowSpan = 2;
+  dateRow.appendChild(areaTh);
 
-  TIME_SLOTS.forEach(time => {
+  const elementTh = document.createElement("th");
+  elementTh.textContent = "要素";
+  elementTh.rowSpan = 2;
+  dateRow.appendChild(elementTh);
+
+  const slots = getCurrentSlots();
+  const grouped = groupSlotsByDay(slots);
+
+  grouped.forEach(group => {
     const th = document.createElement("th");
-    th.textContent = `${time}時`;
-    tr.appendChild(th);
+    th.textContent = group.dayLabel;
+    th.colSpan = group.slots.length;
+    th.className = "date-header-cell";
+    dateRow.appendChild(th);
   });
 
-  thead.appendChild(tr);
+  slots.forEach(slot => {
+    const th = document.createElement("th");
+    th.className = "time-band-cell";
+    th.innerHTML = `
+      <div class="time-band-label">${slot.label}</div>
+      <div class="time-band-range">${slot.range}</div>
+    `;
+    timeRow.appendChild(th);
+  });
+
+  thead.appendChild(dateRow);
+  thead.appendChild(timeRow);
+
   return thead;
+}
+
+function groupSlotsByDay(slots) {
+  const map = new Map();
+
+  slots.forEach(slot => {
+    if (!map.has(slot.day)) {
+      map.set(slot.day, {
+        day: slot.day,
+        dayLabel: slot.dayLabel,
+        slots: []
+      });
+    }
+
+    map.get(slot.day).slots.push(slot);
+  });
+
+  return [...map.values()];
 }
 
 function handleCellClick(event) {
@@ -389,6 +553,8 @@ function handleCellClick(event) {
 }
 
 function handleCellMouseDown(event) {
+  if (event.button !== 0) return;
+
   const td = event.currentTarget;
 
   dragState = {
@@ -519,13 +685,16 @@ function renderFrames() {
       frameEl.classList.add("active");
     }
 
-    frameEl.style.left = `${startRect.left - containerRect.left + elements.chartContainer.scrollLeft}px`;
-    frameEl.style.top = `${startRect.top - containerRect.top + elements.chartContainer.scrollTop}px`;
+    frameEl.style.left =
+      `${startRect.left - containerRect.left + elements.chartContainer.scrollLeft}px`;
+    frameEl.style.top =
+      `${startRect.top - containerRect.top + elements.chartContainer.scrollTop}px`;
     frameEl.style.width = `${endRect.right - startRect.left}px`;
     frameEl.style.height = `${endRect.bottom - startRect.top}px`;
     frameEl.style.borderColor = frame.color;
 
-    frameEl.addEventListener("click", () => {
+    frameEl.addEventListener("click", event => {
+      event.stopPropagation();
       activeFrameId = frame.id;
       renderFrames();
     });
@@ -596,7 +765,7 @@ function loadSelectedChart() {
 
   if (!name || !savedCharts[name]) return;
 
-  state = structuredCloneSafe(savedCharts[name]);
+  state = normalizeLoadedState(structuredCloneSafe(savedCharts[name]));
   activeFrameId = null;
 
   if (elements.prefectureSelect) {
@@ -607,6 +776,14 @@ function loadSelectedChart() {
 
   if (elements.patternSelect) {
     elements.patternSelect.value = state.pattern;
+  }
+
+  if (elements.startTimeSelect) {
+    elements.startTimeSelect.value = String(state.startHour ?? 21);
+  }
+
+  if (elements.endDaySelect) {
+    elements.endDaySelect.value = String(state.endDay ?? 1);
   }
 
   refreshRegionSelect();
@@ -665,12 +842,72 @@ async function exportPng() {
     scale: 2
   });
 
-  const fileName = elements.pngFileNameInput?.value?.trim() || "weather-barchart";
+  const fileName =
+    elements.pngFileNameInput?.value?.trim() || "weather-barchart";
 
   const link = document.createElement("a");
   link.download = `${fileName}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
+}
+
+function getCurrentSlots() {
+  return createTimeSlots(state.startHour, state.endDay);
+}
+
+function getStartHour() {
+  return Number(elements.startTimeSelect?.value ?? state?.startHour ?? 21);
+}
+
+function getEndDay() {
+  return Number(elements.endDaySelect?.value ?? state?.endDay ?? 1);
+}
+
+function getFirstPattern(prefecture) {
+  return Object.keys(PREFECTURE_CONFIG[prefecture].patterns)[0];
+}
+
+function normalizeLoadedState(loadedState) {
+  const startHour = Number(loadedState.startHour ?? 21);
+  const endDay = Number(loadedState.endDay ?? 1);
+  const slots = createTimeSlots(startHour, endDay);
+
+  return {
+    ...loadedState,
+    startHour,
+    endDay,
+    rows: loadedState.rows.map(row => {
+      const oldCells = new Map((row.cells || []).map(cell => [cell.key, cell]));
+
+      return {
+        ...row,
+        cells: slots.map(slot => {
+          const oldCell = oldCells.get(slot.key);
+
+          if (oldCell) {
+            return {
+              key: slot.key,
+              day: slot.day,
+              hour: slot.hour,
+              value: oldCell.value || "",
+              fillColor: oldCell.fillColor || "",
+              warning: oldCell.warning || ""
+            };
+          }
+
+          return {
+            key: slot.key,
+            day: slot.day,
+            hour: slot.hour,
+            value: "",
+            fillColor: "",
+            warning: ""
+          };
+        })
+      };
+    }),
+    frames: loadedState.frames || []
+  };
 }
 
 function createId() {
