@@ -1,11 +1,13 @@
+/* =========================
+   リセット・基本
+========================= */
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
   background: #eef3f8;
   color: #102033;
 }
@@ -20,14 +22,14 @@ button {
   cursor: pointer;
   border: none;
   border-radius: 10px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   background: #2563eb;
-  color: #ffffff;
+  color: white;
   font-weight: 700;
 }
 
 button:hover {
-  opacity: 0.88;
+  opacity: 0.85;
 }
 
 button.danger {
@@ -38,207 +40,192 @@ input,
 select {
   width: 100%;
   border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  padding: 8px 10px;
-  background: #ffffff;
-  color: #102033;
+  border-radius: 8px;
+  padding: 6px 8px;
 }
 
-label {
-  display: grid;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #334155;
-}
-
+/* =========================
+   レイアウト
+========================= */
 .app-header {
-  padding: 18px 24px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #0f172a, #1d4ed8);
-  color: #ffffff;
+  color: white;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .app-header p {
-  margin: 6px 0 0;
-  color: #dbeafe;
-  font-size: 14px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #cbd5f5;
 }
 
 .app-layout {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 18px;
-  padding: 18px;
+  grid-template-columns: 300px 1fr;
+  gap: 14px;
+  padding: 14px;
 }
 
+/* =========================
+   左パネル
+========================= */
 .control-panel {
   display: grid;
-  gap: 14px;
-  align-content: start;
+  gap: 12px;
 }
 
 .panel-section {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
   display: grid;
-  gap: 10px;
-  padding: 14px;
-  background: #ffffff;
-  border: 1px solid #dbe4ee;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 .panel-section h2 {
-  margin: 0 0 2px;
-  font-size: 16px;
-  color: #0f172a;
+  margin: 0;
+  font-size: 15px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .button-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.radio-label input {
-  width: auto;
-}
-
-.chart-panel {
-  min-width: 0;
-}
-
+/* =========================
+   チャート
+========================= */
 .chart-export-target {
   position: relative;
-  background: #ffffff;
-  border: 1px solid #dbe4ee;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
 
 .chart-title-area {
   display: flex;
-  align-items: end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
+  align-items: end;
+  margin-bottom: 10px;
 }
 
 .chart-title-area h2 {
   margin: 0;
-  font-size: 22px;
-  color: #0f172a;
+  font-size: 20px;
 }
 
 .chart-title-area p {
   margin: 0;
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 700;
+  font-size: 12px;
+  color: #555;
 }
 
 .chart-scroll-wrap {
   position: relative;
   overflow: auto;
   border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  background: #f8fafc;
+  border-radius: 10px;
 }
 
-.chart-container {
-  position: relative;
-  min-width: 900px;
-}
-
+/* =========================
+   テーブル
+========================= */
 .bar-chart-table {
-  width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-  background: #ffffff;
+  width: 100%;
+  min-width: 900px;
 }
 
 .bar-chart-table th,
 .bar-chart-table td {
   border: 1px solid #cbd5e1;
   text-align: center;
-  vertical-align: middle;
 }
 
-.bar-chart-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  height: 42px;
-  background: #e0f2fe;
-  color: #0f172a;
-  font-size: 13px;
+/* ===== 日付行 ===== */
+.date-header-cell {
+  background: #dbeafe !important;
+  font-size: 14px;
+  font-weight: 900;
 }
 
-.bar-chart-table th:first-child {
-  width: 92px;
+/* ===== 時間帯行 ===== */
+.time-band-cell {
+  height: 56px;
+  padding: 4px;
 }
 
-.bar-chart-table th:nth-child(2) {
-  width: 92px;
+.time-band-label {
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
 }
 
+.time-band-range {
+  font-size: 10px;
+  color: #475569;
+}
+
+/* ===== 固定列 ===== */
 .area-cell,
 .element-cell {
   background: #f1f5f9;
-  color: #0f172a;
   font-size: 13px;
   font-weight: 800;
 }
 
+/* =========================
+   セル
+========================= */
 .chart-cell {
   position: relative;
-  height: 58px;
-  min-width: 76px;
-  background: #ffffff;
-  transition: background-color 0.12s ease;
+  height: 60px;
+  min-width: 70px;
+  background: white;
+  transition: 0.15s;
   user-select: none;
 }
 
 .chart-cell:hover {
   outline: 2px solid #2563eb;
-  outline-offset: -2px;
 }
 
 .cell-value {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
-  line-height: 1.2;
-  white-space: pre-wrap;
 }
 
+/* 注意報 */
 .warning-mark {
   position: absolute;
-  right: 4px;
   bottom: 3px;
-  min-width: 22px;
-  padding: 1px 4px;
-  border-radius: 999px;
+  right: 3px;
   background: #fee2e2;
   color: #b91c1c;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1.3;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 10px;
+  font-weight: bold;
 }
 
+/* =========================
+   枠（ドラッグ）
+========================= */
 .selection-overlay {
   position: absolute;
   inset: 0;
@@ -247,52 +234,38 @@ label {
 
 .selection-frame {
   position: absolute;
-  border: 3px solid #ef4444;
-  border-radius: 5px;
+  border: 3px solid red;
+  border-radius: 6px;
   pointer-events: auto;
-  background: transparent;
 }
 
 .selection-frame.active {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.3);
 }
 
 .selection-frame-label {
   position: absolute;
-  left: -3px;
-  top: -25px;
-  padding: 3px 8px;
-  border-radius: 6px 6px 0 0;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
+  top: -20px;
+  left: 0;
+  font-size: 11px;
+  padding: 2px 6px;
+  color: white;
+  border-radius: 4px;
 }
 
+/* =========================
+   レスポンシブ
+========================= */
 @media (max-width: 900px) {
   .app-layout {
     grid-template-columns: 1fr;
-    padding: 12px;
   }
 
-  .control-panel {
-    grid-template-columns: 1fr;
+  .chart-scroll-wrap {
+    overflow-x: auto;
   }
 
-  .app-header {
-    padding: 16px;
-  }
-
-  .app-header h1 {
-    font-size: 20px;
-  }
-
-  .chart-title-area {
-    display: grid;
-    align-items: start;
-  }
-
-  .chart-container {
-    min-width: 760px;
+  .bar-chart-table {
+    min-width: 700px;
   }
 }
