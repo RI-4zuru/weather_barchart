@@ -30,6 +30,28 @@
           <select id="patternSelect"></select>
         </label>
 
+        <label>
+          開始時刻
+          <select id="startTimeSelect">
+            <option value="0">00時</option>
+            <option value="3">03時</option>
+            <option value="6">06時</option>
+            <option value="9">09時</option>
+            <option value="12">12時</option>
+            <option value="15">15時</option>
+            <option value="18">18時</option>
+            <option value="21" selected>21時</option>
+          </select>
+        </label>
+
+<label>
+  終了
+  <select id="endDaySelect">
+    <option value="1" selected>明日まで</option>
+    <option value="2">明後日まで</option>
+  </select>
+</label>
+
         <div class="button-row">
           <button id="newChartBtn" type="button">新規作成</button>
           <button id="resetChartBtn" type="button" class="danger">初期化</button>
