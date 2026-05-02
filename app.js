@@ -501,10 +501,7 @@ function createTableHeader() {
   slots.forEach(slot => {
     const th = document.createElement("th");
     th.className = "time-band-cell";
-    th.innerHTML = `
-      <div class="time-band-label">${slot.label}</div>
-      <div class="time-band-range">${slot.range}</div>
-    `;
+    th.textContent = slot.label;
     timeRow.appendChild(th);
   });
 
